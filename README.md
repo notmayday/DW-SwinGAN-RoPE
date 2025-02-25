@@ -60,8 +60,15 @@ tqdm==4.65.0
 git clone https://github.com/notmayday/DW-SwinGAN-RoPE
 cd DW-SwinGAN-RoPE
 ```
-## Dataset 
-This project uses raw MRI prostate dataset from [FastMRI Prostate](https://github.com/cai2r/fastMRI_prostate)
+## Dataset & Pre-processing
+This project uses the raw MRI prostate dataset from [FastMRI Prostate](https://github.com/cai2r/fastMRI_prostate).
+
+After downloading the dataset, run the following command to start the pre-processing: <br />
+
+```
+python3 ./pre-processing/ExtractingMultiCoilData.py 
+
+```
 
 ## Train
 
