@@ -103,43 +103,10 @@ class fastMRIdataset(Dataset):
 
         mask_path = args.mask_path
 
-
-        # if args.mask_type=='radial':
-        #     maskfile_path = './Masks/radial/radial_{}.tif'.format(args.sampling_percentage)
-        #     #mask_shift = cv2.imread(r'./Masks/radial/radial_50.tif', 0) / 255
-        #     mask_shift = cv2.imread(maskfile_path, 0) / 255
-        #     mask_shift = np.fft.fftshift(mask_shift)
-        #
-        #     self.masks = mask_shift
-        #     self.maskedNot = 1 - mask_shift
-
         with open(mask_path, 'rb') as pickle_file:
             masks_dictionary = pickle.load(pickle_file)
             self.masks = masks_dictionary['mask1']
             self.maskedNot = 1 - masks_dictionary['mask1']
-
-        # elif args.mask_type=='random':
-        #     with open(mask_path, 'rb') as pickle_file:
-        #         masks_dictionary = pickle.load(pickle_file)
-        #         self.masks=masks_dictionary['mask1']
-        #         self.maskedNot = 1 - masks_dictionary['mask1']
-        # else:
-        #     masks_dictionary = loadmat(mask_path)
-        #     try:
-        #         self.masks = masks_dictionary['Umask']
-        #         self.maskedNot = 1 - masks_dictionary['Umask']
-        #     except:
-        #         try:
-        #             self.masks = masks_dictionary['maskRS2']
-        #             self.maskedNot = 1-masks_dictionary['maskRS2']
-        #         except:
-        #             self.masks = masks_dictionary['population_matrix']
-        #             self.maskedNot = 1 - masks_dictionary['population_matrix']
-
-        # with open(mask_path, 'rb') as pickle_file:
-        #     masks_dictionary = pickle.load(pickle_file)
-
-        # self.masks = np.dstack((masks_dictionary['mask0'], masks_dictionary['mask1'], masks_dictionary['mask2']))
 
 
         #random noise:
@@ -158,10 +125,8 @@ class fastMRIdataset(Dataset):
         return kspace_cplx
 
     def ifft2(self, kspace_cplx):
-        # return np.absolute(np.fft.ifft2(kspace_cplx))[None, :, :]
         return np.absolute(np.fft.ifft2(kspace_cplx))[None, :, :]
     def fft2(self, img):
-        # return np.fft.fftshift(np.fft.fft2(img))
         return np.fft.fftshift(np.fft.fft2(img))
 
     # @classmethod
@@ -174,34 +139,11 @@ class fastMRIdataset(Dataset):
         kspace[:, :, 1] = np.imag(kspace_cplx).astype(np.float32)
         #target image:
         image = self.ifft2(kspace_cplx)
-        #image = image.reshape([self.img_size, self.img_size])
         # HWC to CHW
         kspace = kspace.transpose((2, 0, 1))
-        # masked_Kspace = kspace*self.masks[:, :, slice_num]
         masked_Kspace = kspace*self.masks
         masked_Kspace_cplx = (kspace_ori) * self.masks
         undersampled_img = np.fft.fftshift(self.ifft2((masked_Kspace_cplx)))
-        # masked_Kspace += np.random.uniform(low=self.minmax_noise_val[0], high=self.minmax_noise_val[1],
-        #                                    size=masked_Kspace.shape)*self.maskedNot
-        # masked_Kspace += self.minmax_noise_val[1] * np.random.randn(*masked_Kspace.shape) * self.maskedNot
-        # plt.imshow(undersampled_img[0,:,:], cmap='gray')
-        # plt.title('Image')
-        # plt.show()
-        # plt.imshow(abs(image[0,:, :]), cmap='gray')
-        # plt.title('Image')
-        # plt.show()
-        # masked_Kspace_2 = self.ifft2(masked_Kspace[0,:,:]+1j*masked_Kspace[1,:,:])
-        # plt.imshow(masked_Kspace_2[0,:,:], cmap='gray')
-        # plt.title('Image')
-        # plt.show()
-        # plt.imshow(kspace[0,:,:], cmap='gray')
-        # plt.title('Image')
-        # plt.show()
-        # plt.imshow(kspace[1,:,:], cmap='gray')
-        # plt.title('Image')
-        # plt.show()
-
-
         return masked_Kspace, kspace, image, undersampled_img
 
     def __getitem__(self, i):
@@ -212,12 +154,7 @@ class fastMRIdataset(Dataset):
 
         with h5py.File(full_file_path, 'r') as f:
             add = int(self.num_input_slices / 2)
-            #temp = f['data'][:, :, :].transpose((1,2,0))
-            #imgs = temp[:, :, slice_num - add:slice_num + add + 1] # target images need to be permuted
             kspaces = f['cropped_kspaces'][slice_num-add:slice_num+add+1, coil_num, :, :, ]
-            # snr = np.mean(abs(kspaces)) / np.std(abs(kspaces))
-            # if snr > 0.75:  # Skip to the next iteration if SNR is greater than 1
-            #     return self.__getitem__((i) % len(self.ids))
             imgs = f['cropped_imgs'][slice_num-add:slice_num+add+1, coil_num, :, :, ]
             rss_imgs = f['rss_imgs'][slice_num-add:slice_num+add+1, :, :, ]
             kspaces_multicoil = f['cropped_kspaces'][slice_num-add:slice_num+add+1, : , :, :, ]
@@ -226,8 +163,6 @@ class fastMRIdataset(Dataset):
             rss_img_undersampled = np.sqrt(np.sum(np.abs(undersampled_imgs) ** 2, axis=1))
             kspaces = np.transpose(kspaces, (1, 2, 0))
             imgs = np.transpose(imgs, (1, 2, 0))
-            # rss_imgs = np.transpose(rss_imgs, (1, 2, 0))
-
 
         masked_Kspaces = np.zeros((self.num_input_slices*2, self.img_size, self.img_size))
         target_Kspace = np.zeros((2, self.img_size, self.img_size))
@@ -236,60 +171,18 @@ class fastMRIdataset(Dataset):
 
         for sliceNum in range(self.num_input_slices):
             img = abs(imgs)
-            # sensitivity_map = img / rss_imgs
-            # sensitivity_map = np.transpose(sensitivity_map, (2, 0, 1))
             img = (img - np.min(img)) / (np.max(img) - np.min(img))
-            # kspace = np.squeeze(kspaces)
             img = np.squeeze(img)
             kspace = self.fft2(img)
             kspace_ori = kspaces[:, :, sliceNum]
-
-
             slice_masked_Kspace, slice_full_Kspace, slice_full_img, slice_undersampled_img = self.slice_preprocess(kspace, kspace_ori, sliceNum)
-
             masked_Kspaces[sliceNum*2:sliceNum*2+2, :, :] = slice_masked_Kspace
             img_undersampled = slice_undersampled_img
             sensitivity_map = img_undersampled/rss_img_undersampled
-            # masks =self.masks
-            # plt.figure(figsize=(8, 6))
-            # plt.imshow(masks[:, :], cmap='gray', vmin=0, vmax=1)
-            # plt.axis('off')
-            # plt.show()
             if sliceNum == int(self.num_input_slices/2):
                 target_Kspace = slice_full_Kspace
                 target_img = slice_full_img
                 ori_Kspace = slice_masked_Kspace
-                ###############################
-
-            # plt.imshow(target_img[0, :, :], cmap='gray')
-            # plt.axis('off')
-            # plt.show()
-            # plt.imshow(sensitivity_map[0,:, :], cmap='gray')
-            # plt.axis('off')
-            # plt.show()
-            # plt.imshow(img_undersampled[0, :, :], cmap='gray')
-            # plt.axis('off')
-            # plt.show()
-            # plt.imshow(rss_img_undersampled[0, :, :], cmap='gray')
-            # plt.axis('off')
-            # plt.show()
-            # kspace_real = slice_masked_Kspace[0,:,:]
-            # kspace_imag = slice_masked_Kspace[1,:,:]
-            # kspace = kspace_real+1j*kspace_imag
-            # image = abs(self.ifft2(kspace))
-            # kspace = abs(kspace[:,:])
-            # plt.imshow(kspace, cmap='gray',vmin=0,vmax=300)
-            # plt.axis('off')
-            # plt.show()
-            # plt.imshow(image[ 0, :, :], cmap='gray')
-            # plt.axis('off')
-            # plt.show()
-
-            # plt.imshow(rss_imgs[0, :, :], cmap='gray')
-            # plt.axis('off')
-            # plt.show()
-            #
-            # kk=0
 
         return {'masked_Kspaces': torch.from_numpy(masked_Kspaces), 'target_Kspace': torch.from_numpy(target_Kspace),
                 'target_img': torch.from_numpy(target_img),'ori_Kspace': torch.from_numpy(ori_Kspace),'sensitivity_map': torch.from_numpy(sensitivity_map)}
