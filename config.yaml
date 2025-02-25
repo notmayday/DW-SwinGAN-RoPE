@@ -1,17 +1,14 @@
 
                                     #Data parameters
 dataset: "fastMRI"                                                      # Dataset type. 
-train_data_dir: "/media/samuel/storage/UIH/V3+/data/h5/Train_T2_prostate_MC"                                    # Training files dir, should contain hdf5 preprocessed data.
-val_data_dir: "/media/samuel/storage/UIH/V3+/data/h5/Val_T2_prostate_MC"                                        # Validation files dir, should contain hdf5 preprocessed data.
-#train_data_dir: "data/h5/train"                                    # Training files dir, should contain hdf5 preprocessed data.
-#val_data_dir: "data/h5/val" 
+train_data_dir: ""                                    # Training files dir, should contain hdf5 preprocessed data.
+val_data_dir: ""                                        # Validation files dir, should contain hdf5 preprocessed data.
 output_dir: "OUTPUT_PATH"                                           # Directory to save checkpoints and tensorboard data.
-sampling_percentage: 8x                                             # Sampling mask precentage (provided with the code 20%,30% and 50% sampling masks of 256X256).
-mask_type: equispaced                                     # mask: radial,cartesian,random,gaussian,poisson
-num_input_slices: 1                                                 # Num of slices to use for input (3 means the predicted slice + previous slice + next slice).
-img_size: 320                                                       # Input image size (256X256 for IXI).
-#slice_range: [110,190]                                               # Slices to use for training data.
-slice_range: [2,27]   #knee:[4,28];brain:[0,8];prostate:[0,28]
+sampling_percentage: 8x                                             # Sampling mask precentage .
+mask_type: equispaced                                     
+num_input_slices: 1                                                 
+img_size: 320                                                       # Input image size                        
+slice_range: [2,27]   # Slices to use for training data.
                                   #Load checkpoint
 load_cp: 0                                                          # 0 to start a new training or checkpoint path to load network weights.
 resume_training: 1                                                  # 0 - Load only model weights , 1 - Load Weights + epoch number + optimizer and scheduler state.
@@ -40,9 +37,9 @@ use_checkpoint: False
                                   #Training parameters
 lr: 0.001                                                           # Learning rate default: 0.001
 epochs_n: 300                                                   # Number of epochs
-batch_size: 5                                                # Batch size. Reduce if out of memory.Batch size of 32 256X256 images needs ~13GB memory.
+batch_size: 5                                                # Batch size. Reduce if out of memory.
 GAN_training: 1                                                     # 1 - Use GAN training. 0 - No GAN (no discriminator training and adverserial loss)
-loss_weights: [5000, 5000, 50, 1, 10, 10, 100]                          # Loss weighting [Imspac L2, Imspace L1, Kspace L2, GAN_Loss, FFL,DCT_Loss, DCT_img_loss]. Losses are weighted to be roughly at the same scale. Reference:1500, 2000, 3, 1, 0,2000
+loss_weights: [5000, 5000, 50, 1, 10, 10, 100]                          # Loss weighting [Imspac L2, Imspace L1, Kspace L2, GAN_Loss, FFL,DCT_Loss, DCT_img_loss]. Losses are weighted to be roughly at the same scale. 
 minmax_noise_val: [-0.1,0.1]
 lambda_l1: 0.0000001      
 lambda_l2: 0.0000001      
@@ -61,13 +58,9 @@ val_num_workers: 10                                                  # Number of
 save_prediction: 1                                                  # Save predicted images.
 save_path: "SAVE_path"                                              # Path to save predictions
 visualize_images: 1                                                 # Visualize predicted images.0
-#model: "./OUTPUT_PATH/CP_epoch14.pth"   
-#model: "./OUTPUT_PATH/ACP_epoch96_T2_poisson_30.pth"                                     # Model checkpoint to use for prediction.0.
-#model: "./OUTPUT_PATH/ACP_epoch50_T2_poisson_30.pth"
-#model: "./OUTPUT_PATH/ACP_epoch85_T2_poisson_sampling30_PSNR40.98_SSIM0.98.pth"    
-model: "./OUTPUT_PATH/V4.7T_epoch61_T2prostate_random_4x_PSNR34.40_SSIM0.8882_3ch_DynamicW_(tar_pred).pth" 
+model: "" 
   
-predict_data_dir: "/media/samuel/storage/UIH/V3+/data/h5/Test_T2_prostate_MC"                                   # Test set files dir, should contain hdf5 preprocessed data.
+predict_data_dir: ""                                   # Test set files dir, should contain hdf5 preprocessed data.
 
                                   #Additional Parameters
 GP: True
