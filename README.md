@@ -13,7 +13,7 @@ Official PyTorch implementation of DW-SwinGAN-RoPE for prostate MRI reconstructi
 
 <div align="center">
   <figure> 
-    <img src="./asserts/framework_block.png" width="800px">
+    <img src="./asserts/framework.png" width="800px">
     <figcaption><br />Pre-processing Block for Multi-coil MRI Raw Data</figcaption> 
   </figure> 
 </div>
@@ -57,8 +57,8 @@ tqdm==4.65.0
 ## Installation
 - Clone this repo:
 ```bash
-git clone https://github.com/notmayday/CS-SwinGAN_MC_Rec
-cd CS-SwinGAN_MC_Rec
+git clone https://github.com/notmayday/DW-SwinGAN-RoPE
+cd DW-SwinGAN-RoPE
 ```
 
 ## Train
