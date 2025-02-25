@@ -24,8 +24,6 @@ def train(args):
     print(PRE_model.bilinear)
     logging.info(f'Network:\n'
                  f'\t{"Bilinear" if PRE_model.bilinear else "Transposed conv"} upscaling')
-    # PRE_optimizer = torch.optim.SGD(G_model.parameters(), lr=args.lr, momentum=0.9)
-    # PRE_optimizer = torch.optim.RMSprop(G_model.parameters(), lr=args.lr, alpha=(0.999))
     PRE_optimizer = torch.optim.Adam(PRE_model.parameters(), lr=args.lr, betas=(0.9, 0.999), weight_decay=0.000)
     PRE_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(PRE_optimizer, 'min', patience=5)
     PRE_model.to(device=args.device)
@@ -33,19 +31,12 @@ def train(args):
     G_model = WNet(args)
     logging.info(f'Network:\n'
                  f'\t{"Bilinear" if G_model.bilinear else "Transposed conv"} upscaling')
-    # G_optimizer = torch.optim.SGD(G_model.parameters(), lr=args.lr, momentum=0.9)
-    #G_optimizer = torch.optim.RMSprop(G_model.parameters(), lr=args.lr, alpha=(0.999))
     G_optimizer = torch.optim.Adam(G_model.parameters(), lr=args.lr, betas=(0.9, 0.999), weight_decay=0.000)
     G_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(G_optimizer, 'min', patience=5)
     G_model.to(device=args.device)
     # Init Discriminator network
     D_model = PatchGAN(1, crop_center=args.crop_center)
-    #D_model = SwinDiscriminator(config=args, num_classes=2, crop_center=args.crop_center, img_size=args.img_size, in_chans=1)
-    #D_model = TransDiscriminator(config=args)
-    #D_model = AttenDiscriminator(config=args)
-    #D_optimizer = torch.optim.SGD(G_model.parameters(), lr=2*args.lr, momentum=0.9)
     D_optimizer = torch.optim.Adam(D_model.parameters(), lr=args.lr*2, betas=(0.9, 0.999), weight_decay=0.000)
-    #D_optimizer = torch.optim.RMSprop(D_model.parameters(), lr=args.lr, alpha=(0.999))
     D_model.to(device=args.device)
 
     # Init Dataloaders
@@ -58,10 +49,6 @@ def train(args):
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.train_num_workers, pin_memory=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.val_num_workers,
                             pin_memory=True, drop_last=True) #Shuffle is true for diffrent images on tensorboard
-
-    # train_list=list(train_loader)
-
-
     # Init tensorboard writer
     if args.tb_write_losses or args.tb_write_images :
         writer = SummaryWriter(log_dir=args.output_dir + '/tensorboard')
@@ -122,25 +109,7 @@ def train(args):
                     #Forward D for G loss:
                     if args.GAN_training:
                         real_D_example = target_img.detach()
-                        #fake_D_example = rec_img + (100000 * (real_D_example - rec_img))
                         fake_D_example = rec_img.detach()
-                        ############################################experiment
-                        # TEMP=fake_D_example.cpu().detach().numpy()
-                        # TEMP_real = real_D_example.cpu().detach().numpy()
-                        # plt.figure(figsize=(8, 6))
-                        # plt.imshow(TEMP[7,0,:,:], cmap='jet', vmin=0, vmax=1)
-                        # plt.colorbar(label='Error map')
-                        # # plt.title('Error Map (GT)')
-                        # plt.axis('off')
-                        # plt.show()
-                        #
-                        # plt.figure(figsize=(8, 6))
-                        # plt.imshow(TEMP_real[7,0,:,:], cmap='jet', vmin=0, vmax=1)
-                        # plt.colorbar(label='Error map')
-                        # # plt.title('Error Map (GT)')
-                        # plt.axis('off')
-                        # plt.show()
-                        #####################################experiment
                         D_real_pred = D_model(real_D_example)
                         D_fake_pred = D_model(fake_D_example)
                         gp = gradient_penalty(D_model, real_D_example, fake_D_example.detach())
@@ -163,18 +132,13 @@ def train(args):
                             DLoss+=0.02*gp
                         # Train/stop Train D criteria
                         train_D = advLoss.item()<D_real_loss.item()*1.25
-
-                    ##################
                     PRE_optimizer.zero_grad()
                     FullLoss_PRE.backward(retain_graph=True)
                     torch.nn.utils.clip_grad_norm_(PRE_model.parameters(), max_norm=1.0)
                     PRE_optimizer.step()
-                    ##########################
-                    #Optimize parameters
                     #Update G
                     if args.GAN_training:
                         set_grad(D_model, False)  # No D update
-
                     G_optimizer.zero_grad()
                     FullLoss.backward()
                     torch.nn.utils.clip_grad_norm_(G_model.parameters(), max_norm=1.0)
@@ -187,12 +151,6 @@ def train(args):
                             DLoss.backward()
                             torch.nn.utils.clip_grad_norm_(D_model.parameters(), max_norm=1.0)
                             D_optimizer.step()
-                            # for name, param in D_model.named_parameters():
-                            #     if param.grad is not None:
-                            #         print(f'Parameter: {name}, Gradient norm: {param.grad.norm()}')
-                            #     else:
-                            #         print(f'Parameter: {name}, Gradient: None')
-
                     #Update progress bar
                     progress += 100*target_Kspace.shape[0]/len(train_dataset)
                     if args.GAN_training:
@@ -203,7 +161,6 @@ def train(args):
                                             'KspaceL2': KspaceL2.item(),'SSIMLoss':SSIMLoss.item, 'weight_k': w1.item(),'weight_Im': w2.item(),'weight_Sparse': w3.item(), 'threshold': threshold.item(), 'bias': w1.item() - w2.item(), 'Prctg of train set': progress})
                     pbar.update(target_Kspace.shape[0])# current batch size
 
-            # On epoch end
             # Validation
             val_rec_img, val_full_img, val_F_rec_Kspace, val_FullLoss, val_ImL2, val_ImL1, val_KspaceL2, val_PSNR, val_SSIM, w1_val, w2_val, w3_val, threshold_val, val_FullLoss_PRE=\
                 eval_net(PRE_model, G_model, val_loader, loss, args.device)
@@ -213,14 +170,6 @@ def train(args):
             # Schedular update
             PRE_scheduler.step(val_FullLoss_PRE)
             G_scheduler.step(val_FullLoss)
-
-
-        # 2. 记录这个epoch的模型的参数和梯度
-        #     for tag, value in G_model.named_parameters():
-        #         tag = tag.replace('.', '/')
-        #         writer.histo_summary(tag, value.data.cpu().numpy(), epoch)
-        #         writer.histo_summary(tag + '/grad', value.grad.data.cpu().numpy(), epoch)
-
             #Write to TB:
             if args.tb_write_losses:
                 writer.add_scalar('train/FullLoss', FullLoss.item(), epoch)
@@ -308,7 +257,6 @@ def get_args():
 
     pprint(data)
     return args
-
 def gradient_penalty(D, xr, xf):
     # [b,1]
     t = torch.rand(320, 1).cuda()
