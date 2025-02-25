@@ -14,7 +14,7 @@ Official PyTorch implementation of DW-SwinGAN-RoPE for prostate MRI reconstructi
 <div align="center">
   <figure> 
     <img src="./asserts/framework.png" width="800px">
-    <figcaption><br />Pre-processing Block for Multi-coil MRI Raw Data</figcaption> 
+    <figcaption><br />The whole framework</figcaption> 
   </figure> 
 </div>
 
@@ -24,7 +24,7 @@ Official PyTorch implementation of DW-SwinGAN-RoPE for prostate MRI reconstructi
 <div align="center">
   <figure> 
     <img src="./asserts/RoPE Attention.png" width="800px">
-    <figcaption><br />Proposed Compressed Sensing Block</figcaption> 
+    <figcaption><br />Rotary Position Embedding Attention in Swin-transformer</figcaption> 
     <figure> 
 </div>
 
