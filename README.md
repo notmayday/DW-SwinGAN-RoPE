@@ -13,7 +13,7 @@ Official PyTorch implementation of DW-SwinGAN-RoPE for prostate MRI reconstructi
 
 The specific implementation of RoPE (Rotary Position Embedding) applied in Swin Transformer is available at:
 
-DW-SwinGAN-RoPE/Networks/swin-transformer-ROPE.py
+`DW-SwinGAN-RoPE/Networks/swin-transformer-ROPE.py`.
 
 <br />
 <br />
