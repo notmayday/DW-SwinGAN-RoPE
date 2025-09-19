@@ -90,11 +90,11 @@ python3 train.py
 
 We have established a checkpoint based on our ongoing work. For optimal results, we recommend training your own DW-SwinGAN-RoPE model.
 <br />
-[**Prostate_T2_equispaced_4x (Embed_dim=48)Proposed**](https://drive.google.com/file/d/1CXM74I7a9_5cwTnBeIgwzsBi9zYJeREP/view?usp=drive_link)
+[Prostate_T2_equispaced_4x (Embed_dim=48)](https://drive.google.com/file/d/1CXM74I7a9_5cwTnBeIgwzsBi9zYJeREP/view?usp=drive_link)
 <br />
-[Prostate_T2_equispaced_4x Embed_dim=72](https://drive.google.com/file/d/1O1WrO5eypboHumXVGQ4eSgQRQaheoR_g/view?usp=drive_link)
+[Prostate_T2_equispaced_4x Embed_dim=72](https://drive.google.com/file/d/15NOFWl00GLsorhyPLS1TrllQQWss9vwp/view?usp=drive_link)
 <br />
-[Prostate_T2_equispaced_4x Embed_dim=96](https://drive.google.com/file/d/1MNvC1cjPBbpvsHGVyU7y6U3rUlKQLD3s/view?usp=drive_link)
+[Prostate_T2_equispaced_4x Embed_dim=96](https://drive.google.com/file/d/1mgXAMAg7Lf5R82zTN3IssTdg8hU3gpMT/view?usp=drive_link)
 
 # Citation
 You are encouraged to modify/distribute this code. However, please acknowledge this code and cite the paper appropriately.
