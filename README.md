@@ -30,7 +30,7 @@ The specific implementation of RoPE (Rotary Position Embedding) applied in Swin 
 
 <div align="center">
   <figure> 
-    <img src="./asserts/RoPE Attention.png" width="800px">
+    <img src="./asserts/RoPE Attention in SWT.png" width="800px">
     <figcaption><br />Rotary Position Embedding Attention in Swin-transformer</figcaption> 
     <figure> 
 </div>
