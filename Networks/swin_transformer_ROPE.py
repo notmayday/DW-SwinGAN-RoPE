@@ -168,27 +168,22 @@ class WindowAttention(nn.Module):
         q = q * self.scale
         #########################################
         # Rope for SWT
-        # Permute and reshape q and k
-        q = q.permute(0, 2, 1, 3).reshape(B_, N, C)
-        k = k.permute(0, 2, 1, 3).reshape(B_, N, C)
-        C_half = C // 2
-        indices_theta = torch.arange(C_half, dtype=torch.float)
+        d = C // self.num_heads
+        d_half = d//2
+        indices_theta = torch.arange(d_half, dtype=torch.float)
         indices_theta = indices_theta.repeat_interleave(2)
         indices_pos = torch.arange(1, N + 1, dtype=torch.float).unsqueeze(1)
 
-        # Compute t and expand it to (64, 96)
-        t = 10000 ** (-2 * indices_theta / C).unsqueeze(0)
+        # Compute t and expand it 
+        t = 10000 ** (-2 * indices_theta / d).unsqueeze(0)
         t_expanded = indices_pos * t
         # Compute cos(t_expanded) and sin(t_expanded)
-        cos_t_expanded = torch.cos(t_expanded).unsqueeze(0).to('cuda')  # Shape: (1, 64, 96)
-        sin_t_expanded = torch.sin(t_expanded).unsqueeze(0).to('cuda')  # Shape: (1, 64, 96)
+        cos_t_expanded = torch.cos(t_expanded).unsqueeze(0).to('cuda')  
+        sin_t_expanded = torch.sin(t_expanded).unsqueeze(0).to('cuda')  
         # Apply rotation to q and k
         q_rotated = self.apply_rotation(q, cos_t_expanded, sin_t_expanded)
         k_rotated = self.apply_rotation(k, cos_t_expanded, sin_t_expanded)
 
-        # Reshape and permute q and k for attention calculation
-        q_rotated = q_rotated.reshape(B_, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
-        k_rotated = k_rotated.reshape(B_, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
         # Calculate attention
         attn = torch.matmul(q_rotated, k_rotated.transpose(-2, -1))
         ######################################
