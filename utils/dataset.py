@@ -8,10 +8,7 @@ import logging
 from PIL import Image
 import h5py
 import pickle
-from scipy.io import loadmat, savemat
-import matplotlib.pyplot as plt
-import cv2
-from tqdm import tqdm
+
 class BasicDataset(Dataset):
     def __init__(self, imgs_dir, masks_dir, scale=1):
         self.imgs_dir = imgs_dir
@@ -38,7 +35,6 @@ class BasicDataset(Dataset):
         if len(img_nd.shape) == 2:
             img_nd = np.expand_dims(img_nd, axis=2)
 
-        # HWC to CHW
         img_trans = img_nd.transpose((2, 0, 1))
         if img_trans.max() > 1:
             img_trans = img_trans / 255
@@ -108,42 +104,27 @@ class fastMRIdataset(Dataset):
             self.masks = masks_dictionary['mask1']
             self.maskedNot = 1 - masks_dictionary['mask1']
 
-
         #random noise:
         self.minmax_noise_val = args.minmax_noise_val
 
     def __len__(self):
         return len(self.ids)
 
-    def crop_toshape(self, kspace_cplx):
-        if kspace_cplx.shape[0] == self.img_size:
-            return kspace_cplx
-        if kspace_cplx.shape[0] % 2 == 1:
-            kspace_cplx = kspace_cplx[:-1, :-1]
-        crop = int((kspace_cplx.shape[0] - self.img_size)/2)
-        kspace_cplx = kspace_cplx[crop:-crop, crop:-crop]
-        return kspace_cplx
 
     def ifft2(self, kspace_cplx):
-        return np.absolute(np.fft.ifft2(kspace_cplx))[None, :, :]
+        return np.absolute(np.fft.ifftshift(np.fft.ifft2(kspace_cplx), axes=[2,3]))
     def fft2(self, img):
-        return np.fft.fftshift(np.fft.fft2(img))
+        return np.fft.fft2(np.fft.fftshift(img, axes=[2,3]))
 
     # @classmethod
     def slice_preprocess(self, kspace_cplx, kspace_ori, slice_num):
-        #crop to fix size
-        kspace_cplx = self.crop_toshape(kspace_cplx)
-        #split to real and imaginary channels
-        kspace = np.zeros((self.img_size, self.img_size, 2))
-        kspace[:, :, 0] = np.real(kspace_cplx).astype(np.float32)
-        kspace[:, :, 1] = np.imag(kspace_cplx).astype(np.float32)
-        #target image:
-        image = self.ifft2(kspace_cplx)
-        # HWC to CHW
-        kspace = kspace.transpose((2, 0, 1))
+        kspace = np.zeros((2, self.img_size, self.img_size))
+        kspace[0,:, :] = np.real(kspace_cplx).astype(np.float32)
+        kspace[1,:, :] = np.imag(kspace_cplx).astype(np.float32)
+        image = np.fft.ifftshift(np.fft.ifft2(kspace_cplx))
         masked_Kspace = kspace*self.masks
         masked_Kspace_cplx = (kspace_ori) * self.masks
-        undersampled_img = np.fft.fftshift(self.ifft2((masked_Kspace_cplx)))
+        undersampled_img = abs(np.fft.ifftshift(np.fft.ifft2(masked_Kspace_cplx)))
         return masked_Kspace, kspace, image, undersampled_img
 
     def __getitem__(self, i):
@@ -161,8 +142,7 @@ class fastMRIdataset(Dataset):
             kspaces_multicoil = kspaces_multicoil * self.masks[np.newaxis,np.newaxis,:,:]
             undersampled_imgs = abs(np.fft.ifftshift(np.fft.ifft2(kspaces_multicoil),axes=[2,3]))
             rss_img_undersampled = np.sqrt(np.sum(np.abs(undersampled_imgs) ** 2, axis=1))
-            kspaces = np.transpose(kspaces, (1, 2, 0))
-            imgs = np.transpose(imgs, (1, 2, 0))
+
 
         masked_Kspaces = np.zeros((self.num_input_slices*2, self.img_size, self.img_size))
         target_Kspace = np.zeros((2, self.img_size, self.img_size))
@@ -172,10 +152,12 @@ class fastMRIdataset(Dataset):
         for sliceNum in range(self.num_input_slices):
             img = abs(imgs)
             img = (img - np.min(img)) / (np.max(img) - np.min(img))
-            img = np.squeeze(img)
-            kspace = self.fft2(img)
-            kspace_ori = kspaces[:, :, sliceNum]
+            kspace = np.fft.fft2(np.fft.fftshift(img))
+            kspace_ori = kspaces[sliceNum,:, :]
+
+
             slice_masked_Kspace, slice_full_Kspace, slice_full_img, slice_undersampled_img = self.slice_preprocess(kspace, kspace_ori, sliceNum)
+
             masked_Kspaces[sliceNum*2:sliceNum*2+2, :, :] = slice_masked_Kspace
             img_undersampled = slice_undersampled_img
             sensitivity_map = img_undersampled/rss_img_undersampled
