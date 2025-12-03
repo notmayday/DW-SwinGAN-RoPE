@@ -7,7 +7,7 @@ from utils.prostate_rec.utils import t2_reconstruction
 def ifft2(kspace_cplx):
     return np.fft.ifftshift(np.fft.ifft2(kspace_cplx),axes=[3,4])
 def fft2(img):
-    return np.fft.fft2(np.fft.fftshift(img),axes=[2,3])
+    return np.fft.fft2(np.fft.fftshift(img,axes=[2,3]))
 
 directory_path=''
 save_path=''
