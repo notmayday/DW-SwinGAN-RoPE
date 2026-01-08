@@ -73,7 +73,7 @@ This project uses the raw MRI prostate dataset from [FastMRI Prostate](https://g
 After downloading the dataset, run the following command to start the pre-processing: <br />
 
 ```
-python3 ./pre-processing/ExtractingMultiCoilData.py 
+python3 ./pre-processing/ExtractingMultiCoilData_ProstateT2WI.py 
 
 ```
 
