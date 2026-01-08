@@ -125,8 +125,8 @@ class netLoss():
         # DCTLoss = torch.tensor(0.1)
         SSIMLoss = 1 - mt.ssim(tar_Im, pred_Im)
 
-        fullLoss = self.ImL2_weights*ImL2 + self.ImL1_weights*ImL1 + self.AdverLoss_weight*advLoss + self.KspaceL2_weights * KspaceL2 +\
-            self.DCT_imgLoss_weight * DCT_imgLoss + self.DCTLoss_weight * DCTLoss + SSIMLoss + self.FFLLoss_weight*fflLoss#+ bias * 0.1
+        fullLoss = 0.2 * (self.ImL2_weights*ImL2 + self.ImL1_weights*ImL1 + self.AdverLoss_weight*advLoss + self.KspaceL2_weights * KspaceL2 +\
+            self.DCT_imgLoss_weight * DCT_imgLoss + self.DCTLoss_weight * DCTLoss + SSIMLoss + self.FFLLoss_weight*fflLoss)#+ bias * 0.1
         return fullLoss, ImL2, ImL1, KspaceL2, advLoss, fflLoss, DCTLoss, DCT_imgLoss, SSIMLoss
 
     def calc_disc_loss(self,D_real,D_fake):
