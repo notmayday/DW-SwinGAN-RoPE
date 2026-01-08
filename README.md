@@ -1,6 +1,6 @@
-# DW-SwinGAN-RoPE for prostate MRI reconstruction
+# DW-SwinGAN-RoPE for MRI reconstruction
 
-Official PyTorch implementation of DW-SwinGAN-RoPE for prostate MRI reconstruction described in the paper "DW-SwinGAN-RoPE: Advancing MRI Dual-Domain Reconstruction with Dynamic Weighting and Rotary Position Embedding Attention".
+Official PyTorch implementation of DW-SwinGAN-RoPE for MRI reconstruction described in the paper "DW-SwinGAN-RoPE: Advancing MRI Dual-Domain Reconstruction with Dynamic Weighting and Rotary Position Embedding Attention".
 <br />
 <br />
 *Rotary Position Embedding Attention of Swin-transformer
